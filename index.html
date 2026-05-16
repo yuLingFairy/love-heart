@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no, email=no, address=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="full-screen" content="yes">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>loveHeart</title>
+    <style>
+        html, body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+        }
+        canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 300px;
+            position: relative;
+        }
+        .modal-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn-yes { background: #ff5e94; color: white; }
+        .btn-no { background: #ccc; color: #333; }
+        .btn-pink { background: #ea80b0; color: white; }
+        .btn-blue { background: #4FC3F7; color: white; }
+        .btn-random { background: linear-gradient(45deg, red, blue, purple); color: white; }
+        .hide { display: none !important; }
+
+        /* 颜色选完后叠在第二层上的「点我」小框：半透明，可看到下面按钮 */
+        #modalPeek {
+            z-index: 200;
+            background: rgba(0,0,0,0.35);
+            pointer-events: auto;
+        }
+        #peekCard {
+            position: fixed;
+            padding: 16px 22px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.92);
+            box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+            cursor: pointer;
+            user-select: none;
+            font-size: 17px;
+            color: #d63384;
+            font-weight: 600;
+            border: 2px dashed #ff5e94;
+            animation: peekPulse 1.2s ease-in-out infinite;
+        }
+        @keyframes peekPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        /* 「不知道」时：只有「知道」，整块可拖走躲点击 */
+        #modalDeny {
+            z-index: 150;
+            background: rgba(0,0,0,0.55);
+        }
+        #denyBox {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: left 0.12s ease-out, top 0.12s ease-out;
+        }
+
+        #btnReset {
+            position: fixed;
+            left: 12px;
+            top: 12px;
+            z-index: 500;
+            padding: 8px 14px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: rgba(30,30,30,0.85);
+            color: #eee;
+            cursor: pointer;
+        }
+        #btnReset:hover { background: #333; color: #fff; }
+    </style>
+</head>
+<body>
+    <button type="button" id="btnReset" onclick="resetAll()">重新选择</button>
+    <canvas id="pinkboard"></canvas>
+
+    <div id="modal1" class="modal">
+        <div class="modal-box">
+            <div class="modal-title">💕 暖心小问答 💕<br>你觉得我对你的心意是真的吗？</div>
+            <button type="button" class="btn btn-yes" onclick="chooseKnow()">知道</button>
+            <button type="button" class="btn btn-no" onclick="chooseNotKnow()">不知道</button>
+        </div>
+    </div>
+
+    <div id="modal2" class="modal hide">
+        <div class="modal-box">
+            <div class="modal-title">🥰 选择爱心颜色 🥰</div>
+            <button type="button" class="btn btn-pink" onclick="chooseColor('粉色')">粉色</button>
+            <button type="button" class="btn btn-blue" onclick="chooseColor('青色')">青色</button>
+            <button type="button" class="btn btn-random" onclick="chooseColor('随机')">随机</button>
+        </div>
+    </div>
+
+    <!-- 选完颜色：叠一层半透明 + 随机位置「点我」 -->
+    <div id="modalPeek" class="modal hide">
+        <div id="peekCard" onclick="confirmPeek(event)">👉 戳这里领走爱心 💖</div>
+    </div>
+
+    <!-- 不知道：只能点知道；点空白处整块跟着躲 -->
+    <div id="modalDeny" class="modal hide">
+        <div id="denyBox" class="modal-box">
+            <div class="modal-title">不许否认嘛🥺<br>再给你一次机会～</div>
+            <button type="button" class="btn btn-yes" id="denyKnowBtn" onclick="chooseKnowFromDeny()">知道</button>
+        </div>
+    </div>
+
+    <script>
+        let userColor = '';
+        let animationId = null;
+        let time = null;
+        let heartImage = null;
+        let particles = null;
+        let particleRate = 0;
+        let canvas = null;
+        let context = null;
+
+        const settings = {
+            particles: {
+                length: 500,
+                duration: 2,
+                velocity: 100,
+                effect: -0.75,
+                size: 32,
+            },
+        };
+
+        (function () {
+            var b = 0;
+            var c = ["ms", "moz", "webkit", "o"];
+            for (var a = 0; a < c.length && !window.requestAnimationFrame; ++a) {
+                window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"];
+                window.cancelAnimationFrame = window[c[a] + "CancelAnimationFrame"] || window[c[a] + "CancelRequestAnimationFrame"];
+            }
+            if (!window.requestAnimationFrame) {
+                window.requestAnimationFrame = function (h, e) {
+                    var d = new Date().getTime();
+                    var f = Math.max(0, 16 - (d - b));
+                    var g = window.setTimeout(function () { h(d + f); }, f);
+                    b = d + f;
+                    return g;
+                };
+            }
+            if (!window.cancelAnimationFrame) {
+                window.cancelAnimationFrame = function (d) { clearTimeout(d); };
+            }
+        })();
+
+        var Point = (function () {
+            function Point(x, y) {
+                this.x = (typeof x !== 'undefined') ? x : 0;
+                this.y = (typeof y !== 'undefined') ? y : 0;
+            }
+            Point.prototype.clone = function () { return new Point(this.x, this.y); };
+            Point.prototype.length = function (length) {
+                if (typeof length == 'undefined')
+                    return Math.sqrt(this.x * this.x + this.y * this.y);
+                this.normalize();
+                this.x *= length;
+                this.y *= length;
+                return this;
+            };
+            Point.prototype.normalize = function () {
+                var length = this.length();
+                this.x /= length;
+                this.y /= length;
+                return this;
+            };
+            return Point;
+        })();
+
+        var Particle = (function () {
+            function Particle() {
+                this.position = new Point();
+                this.velocity = new Point();
+                this.acceleration = new Point();
+                this.age = 0;
+            }
+            Particle.prototype.initialize = function (x, y, dx, dy) {
+                this.position.x = x;
+                this.position.y = y;
+                this.velocity.x = dx;
+                this.velocity.y = dy;
+                this.acceleration.x = dx * settings.particles.effect;
+                this.acceleration.y = dy * settings.particles.effect;
+                this.age = 0;
+            };
+            Particle.prototype.update = function (deltaTime) {
+                this.position.x += this.velocity.x * deltaTime;
+                this.position.y += this.velocity.y * deltaTime;
+                this.velocity.x += this.acceleration.x * deltaTime;
+                this.velocity.y += this.acceleration.y * deltaTime;
+                this.age += deltaTime;
+            };
+            Particle.prototype.draw = function (context, image) {
+                function ease(t) { return (--t) * t * t + 1; }
+                var size = image.width * ease(this.age / settings.particles.duration);
+                context.globalAlpha = 1 - this.age / settings.particles.duration;
+                context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
+            };
+            return Particle;
+        })();
+
+        var ParticlePool = (function () {
+            var particles, firstActive = 0, firstFree = 0, duration = settings.particles.duration;
+            function ParticlePool(length) {
+                particles = new Array(length);
+                for (var i = 0; i < particles.length; i++) particles[i] = new Particle();
+            }
+            ParticlePool.prototype.add = function (x, y, dx, dy) {
+                particles[firstFree].initialize(x, y, dx, dy);
+                firstFree++;
+                if (firstFree == particles.length) firstFree = 0;
+                if (firstActive == firstFree) firstActive++;
+                if (firstActive == particles.length) firstActive = 0;
+            };
+            ParticlePool.prototype.update = function (deltaTime) {
+                var i;
+                if (firstActive < firstFree) {
+                    for (i = firstActive; i < firstFree; i++) particles[i].update(deltaTime);
+                }
+                if (firstFree < firstActive) {
+                    for (i = firstActive; i < particles.length; i++) particles[i].update(deltaTime);
+                    for (i = 0; i < firstFree; i++) particles[i].update(deltaTime);
+                }
+                while (particles[firstActive].age >= duration && firstActive != firstFree) {
+                    firstActive++;
+                    if (firstActive == particles.length) firstActive = 0;
+                }
+            };
+            ParticlePool.prototype.draw = function (context, image) {
+                var i;
+                if (firstActive < firstFree) {
+                    for (i = firstActive; i < firstFree; i++) particles[i].draw(context, image);
+                }
+                if (firstFree < firstActive) {
+                    for (i = firstActive; i < particles.length; i++) particles[i].draw(context, image);
+                    for (i = 0; i < firstFree; i++) particles[i].draw(context, image);
+                }
+            };
+            return ParticlePool;
+        })();
+
+        function getHeartColorHex() {
+            if (userColor === '青色') return '#4FC3F7';
+            if (userColor === '粉色') return '#ea80b0';
+            if (userColor === '随机') {
+                var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            return '#ea80b0';
+        }
+
+        function pointOnHeart(t) {
+            return new Point(
+                160 * Math.pow(Math.sin(t), 3),
+                130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
+            );
+        }
+
+        function buildHeartImage() {
+            var c = document.createElement('canvas');
+            var ctx = c.getContext('2d');
+            c.width = settings.particles.size;
+            c.height = settings.particles.size;
+            function to(t) {
+                var point = pointOnHeart(t);
+                point.x = settings.particles.size / 2 + point.x * settings.particles.size / 350;
+                point.y = settings.particles.size / 2 - point.y * settings.particles.size / 350;
+                return point;
+            }
+            ctx.beginPath();
+            var t = -Math.PI;
+            var point = to(t);
+            ctx.moveTo(point.x, point.y);
+            while (t < Math.PI) {
+                t += 0.01;
+                point = to(t);
+                ctx.lineTo(point.x, point.y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = getHeartColorHex();
+            ctx.fill();
+            var image = new Image();
+            image.src = c.toDataURL();
+            return image;
+        }
+
+        function paintBlackFull() {
+            if (!canvas || !context) return;
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function stopAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            time = null;
+            particles = null;
+            heartImage = null;
+            paintBlackFull();
+        }
+
+        function renderLoop() {
+            if (!heartImage || !heartImage.complete || heartImage.naturalWidth === 0) {
+                animationId = requestAnimationFrame(renderLoop);
+                return;
+            }
+            var newTime = new Date().getTime() / 1000;
+            var deltaTime = newTime - (time || newTime);
+            time = newTime;
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            var amount = particleRate * deltaTime;
+            for (var i = 0; i < amount; i++) {
+                var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
+                var dir = pos.clone().length(settings.particles.velocity);
+                particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
+            }
+            particles.update(deltaTime);
+            particles.draw(context, heartImage);
+            animationId = requestAnimationFrame(renderLoop);
+        }
+
+        function startHeartAnimation() {
+            stopAnimation();
+            heartImage = buildHeartImage();
+            if (!heartImage.complete) {
+                heartImage.onload = function () {
+                    particles = new ParticlePool(settings.particles.length);
+                    particleRate = settings.particles.length / settings.particles.duration;
+                    time = new Date().getTime() / 1000;
+                    animationId = requestAnimationFrame(renderLoop);
+                };
+            } else {
+                particles = new ParticlePool(settings.particles.length);
+                particleRate = settings.particles.length / settings.particles.duration;
+                time = new Date().getTime() / 1000;
+                animationId = requestAnimationFrame(renderLoop);
+            }
+        }
+
+        function onResize() {
+            if (!canvas) return;
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            paintBlackFull();
+        }
+
+        function initCanvas() {
+            canvas = document.getElementById('pinkboard');
+            context = canvas.getContext('2d');
+            window.onresize = onResize;
+            onResize();
+            paintBlackFull();
+        }
+
+        function chooseKnow() {
+            document.getElementById('modal1').classList.add('hide');
+            document.getElementById('modalDeny').classList.add('hide');
+            document.getElementById('modal2').classList.remove('hide');
+        }
+
+        function chooseKnowFromDeny() {
+            document.getElementById('modalDeny').classList.add('hide');
+            document.removeEventListener('click', denyBackdropJump, true);
+            chooseKnow();
+        }
+
+        function chooseNotKnow() {
+            document.getElementById('modal1').classList.add('hide');
+            document.getElementById('modalDeny').classList.remove('hide');
+            centerDenyBox();
+            setTimeout(function () {
+                document.addEventListener('click', denyBackdropJump, true);
+            }, 0);
+        }
+
+        function centerDenyBox() {
+            var box = document.getElementById('denyBox');
+            box.style.left = '50%';
+            box.style.top = '50%';
+            box.style.webkitTransform = 'translate(-50%, -50%)';
+            box.style.transform = 'translate(-50%, -50%)';
+        }
+
+        function denyBackdropJump(ev) {
+            var deny = document.getElementById('modalDeny');
+            if (deny.classList.contains('hide')) return;
+            var btn = document.getElementById('denyKnowBtn');
+            if (btn && (ev.target === btn || btn.contains(ev.target))) return;
+
+            var box = document.getElementById('denyBox');
+            var w = box.offsetWidth || 320;
+            var h = box.offsetHeight || 160;
+            var pad = 20;
+            var nx = ev.clientX - w / 2 + (Math.random() * 80 - 40);
+            var ny = ev.clientY - h / 2 + (Math.random() * 80 - 40);
+            nx = Math.max(pad, Math.min(window.innerWidth - w - pad, nx));
+            ny = Math.max(pad, Math.min(window.innerHeight - h - pad, ny));
+            box.style.left = nx + 'px';
+            box.style.top = ny + 'px';
+            box.style.webkitTransform = 'none';
+            box.style.transform = 'none';
+        }
+
+        function chooseColor(color) {
+            userColor = color;
+            document.getElementById('modalPeek').classList.remove('hide');
+            placePeekRandom();
+        }
+
+        function placePeekRandom() {
+            var card = document.getElementById('peekCard');
+            var cw = card.offsetWidth || 200;
+            var ch = card.offsetHeight || 50;
+            var margin = 24;
+            var maxX = window.innerWidth - cw - margin;
+            var maxY = window.innerHeight - ch - margin;
+            var x = margin + Math.random() * Math.max(1, maxX - margin);
+            var y = margin + Math.random() * Math.max(1, maxY - margin);
+            card.style.left = x + 'px';
+            card.style.top = y + 'px';
+        }
+
+        function confirmPeek(ev) {
+            ev.stopPropagation();
+            document.getElementById('modalPeek').classList.add('hide');
+            document.getElementById('modal2').classList.add('hide');
+            startHeartAnimation();
+        }
+
+        function resetAll() {
+            userColor = '';
+            document.getElementById('modalPeek').classList.add('hide');
+            document.getElementById('modal2').classList.add('hide');
+            document.getElementById('modalDeny').classList.add('hide');
+            document.removeEventListener('click', denyBackdropJump, true);
+            document.getElementById('modal1').classList.remove('hide');
+            stopAnimation();
+        }
+
+        window.addEventListener('load', function () {
+            initCanvas();
+        });
+
+        window.addEventListener('orientationchange', function () {
+            setTimeout(onResize, 300);
+        });
+    </script>
+</body>
+</html>
