@@ -284,65 +284,6 @@
             color: #888;
             margin-top: 8px;
         }
-        #btnExclusive {
-            color: #fff;
-            border: 2px solid rgba(255, 255, 255, 0.85);
-        }
-
-        .color-swatch-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .color-swatch {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 3px solid #fff;
-            box-shadow: 0 0 0 1px #ddd, 0 2px 8px rgba(0,0,0,0.12);
-            cursor: pointer;
-            padding: 0;
-            flex-shrink: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .color-swatch:active { transform: scale(0.92); }
-        .color-swatch.clear-swatch {
-            background: linear-gradient(135deg, #f5f5f5 50%, #e0e0e0 50%);
-            font-size: 18px;
-            line-height: 34px;
-            text-align: center;
-            color: #999;
-            font-weight: 700;
-        }
-        .color-picker-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 8px;
-        }
-        .color-picker-row span {
-            font-size: 13px;
-            color: #555;
-        }
-        #fColorPicker {
-            width: 56px;
-            height: 40px;
-            padding: 0;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            cursor: pointer;
-            background: #fff;
-        }
-        .cfg-advanced {
-            margin-top: 6px;
-            font-size: 13px;
-            color: #666;
-        }
-        .cfg-advanced summary { cursor: pointer; user-select: none; }
-        .cfg-advanced[open] summary { margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -380,31 +321,6 @@
                 <label for="fPeek">选完颜色后的「戳这里」按钮文案</label>
                 <input type="text" id="fPeek" maxlength="80">
             </div>
-            <div class="cfg-field">
-                <label>专属爱心色（可选）</label>
-                <p style="font-size:12px;color:#888;margin:0 0 10px 0;">点下面圆点快速选色；或点「自选」用系统调色盘。不设则互动里仍选粉 / 青 / 随机。</p>
-                <div class="color-swatch-row" id="swatchRow">
-                    <button type="button" class="color-swatch" style="background:#FF5E94" title="玫瑰粉" aria-label="玫瑰粉" onclick="pickSwatchHex('FF5E94')"></button>
-                    <button type="button" class="color-swatch" style="background:#EA80B0" title="樱花粉" aria-label="樱花粉" onclick="pickSwatchHex('EA80B0')"></button>
-                    <button type="button" class="color-swatch" style="background:#E91E63" title="玫红" aria-label="玫红" onclick="pickSwatchHex('E91E63')"></button>
-                    <button type="button" class="color-swatch" style="background:#FF6B9D" title="蜜桃粉" aria-label="蜜桃粉" onclick="pickSwatchHex('FF6B9D')"></button>
-                    <button type="button" class="color-swatch" style="background:#CE93D8" title="香芋紫" aria-label="香芋紫" onclick="pickSwatchHex('CE93D8')"></button>
-                    <button type="button" class="color-swatch" style="background:#4FC3F7" title="晴空蓝" aria-label="晴空蓝" onclick="pickSwatchHex('4FC3F7')"></button>
-                    <button type="button" class="color-swatch" style="background:#26C6DA" title="蒂芙尼青" aria-label="蒂芙尼青" onclick="pickSwatchHex('26C6DA')"></button>
-                    <button type="button" class="color-swatch" style="background:#FFB74D" title="暖杏橙" aria-label="暖杏橙" onclick="pickSwatchHex('FFB74D')"></button>
-                    <button type="button" class="color-swatch" style="background:#A5D6A7" title="抹茶绿" aria-label="抹茶绿" onclick="pickSwatchHex('A5D6A7')"></button>
-                    <button type="button" class="color-swatch clear-swatch" title="不使用专属色" aria-label="清除专属色" onclick="clearExclusiveColor()">×</button>
-                </div>
-                <div class="color-picker-row">
-                    <span>自选颜色</span>
-                    <input type="color" id="fColorPicker" value="#ea80b0" title="打开系统取色器" aria-label="自选颜色">
-                </div>
-                <details class="cfg-advanced">
-                    <summary>高级 · 手动填 6 位色号</summary>
-                    <input type="text" id="fHex" placeholder="如 FF6B9D，不要 #" maxlength="6" pattern="[0-9A-Fa-f]{0,6}" style="margin-top:4px;">
-                </details>
-            </div>
-
             <p class="preset-row">
                 <button type="button" class="btn btn-pink" onclick="restoreDefaultCopy()">恢复默认文案</button>
             </p>
@@ -447,7 +363,6 @@
             <button type="button" class="btn btn-pink" onclick="chooseColor('粉色')">粉色</button>
             <button type="button" class="btn btn-blue" onclick="chooseColor('青色')">青色</button>
             <button type="button" class="btn btn-random" onclick="chooseColor('随机')">随机</button>
-            <button type="button" class="btn btn-yes" id="btnExclusive" onclick="chooseColor('专属')">专属色</button>
         </div>
     </div>
 
@@ -477,8 +392,7 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             letter: '',
             q: '',
             deny: '',
-            peek: '',
-            hex: ''
+            peek: ''
         };
 
         var LETTER_MAX_LEN = 20;
@@ -554,45 +468,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             return esc(s).split(/\r?\n/).join('<br>');
         }
 
-        function isValidHex6(h) {
-            return typeof h === 'string' && /^[0-9A-Fa-f]{6}$/.test(h);
-        }
-
-        function syncColorPickerFromHexField() {
-            var fx = document.getElementById('fHex');
-            var cp = document.getElementById('fColorPicker');
-            if (!fx || !cp) return;
-            var h = fx.value.trim().replace(/^#/, '');
-            if (isValidHex6(h)) cp.value = '#' + h.toLowerCase();
-            else cp.value = '#ea80b0';
-        }
-
-        function pickSwatchHex(hex6) {
-            var raw = String(hex6 || '').replace(/^#/, '').toUpperCase();
-            if (isValidHex6(raw)) document.getElementById('fHex').value = raw;
-            else document.getElementById('fHex').value = '';
-            syncColorPickerFromHexField();
-        }
-
-        function clearExclusiveColor() {
-            document.getElementById('fHex').value = '';
-            document.getElementById('fColorPicker').value = '#ea80b0';
-        }
-
-        function bindExclusiveColorUI() {
-            var cp = document.getElementById('fColorPicker');
-            var fx = document.getElementById('fHex');
-            if (!cp || !fx) return;
-            cp.addEventListener('input', function () {
-                var v = cp.value;
-                if (/^#[0-9A-Fa-f]{6}$/.test(v)) fx.value = v.slice(1).toUpperCase();
-            });
-            fx.addEventListener('input', function () {
-                var h = fx.value.trim().replace(/^#/, '');
-                if (isValidHex6(h)) cp.value = '#' + h.toLowerCase();
-            });
-        }
-
         function scheduleLetterScene() {
             if (LETTER_TIMER) clearTimeout(LETTER_TIMER);
             var delay = getLetterDelayMs();
@@ -640,7 +515,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
                 q: '💗 520 · 给 ' + to + ' 💗\n「我喜欢你」太普通，我想用一辈子慢慢证明。',
                 deny: '520 这天不许说不🥺\n再点一次「知道」，让我继续宠你～',
                 peek: '👉 领取你的 520 专属爱心',
-                hex: 'FF5E94',
                 letter: ''
             };
         }
@@ -653,7 +527,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             PAGE_CFG.q = document.getElementById('fQ').value;
             PAGE_CFG.deny = document.getElementById('fDeny').value;
             PAGE_CFG.peek = document.getElementById('fPeek').value.trim();
-            PAGE_CFG.hex = document.getElementById('fHex').value.trim().replace(/^#/, '');
         }
 
         function writeFormFromCfg() {
@@ -666,8 +539,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             document.getElementById('fQ').value = PAGE_CFG.q || def.q;
             document.getElementById('fDeny').value = PAGE_CFG.deny || def.deny;
             document.getElementById('fPeek').value = PAGE_CFG.peek || def.peek;
-            document.getElementById('fHex').value = PAGE_CFG.hex || def.hex;
-            syncColorPickerFromHexField();
         }
 
         function restoreDefaultCopy() {
@@ -679,7 +550,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             PAGE_CFG.q = def.q;
             PAGE_CFG.deny = def.deny;
             PAGE_CFG.peek = def.peek;
-            PAGE_CFG.hex = def.hex;
             PAGE_CFG.to = keepTo;
             PAGE_CFG.from = keepFrom;
             writeFormFromCfg();
@@ -703,19 +573,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             } else {
                 note.classList.add('hide');
             }
-
-            var btnEx = document.getElementById('btnExclusive');
-            var exHex = isValidHex6(PAGE_CFG.hex) ? PAGE_CFG.hex : defaultCfg().hex;
-            btnEx.style.background = '#' + exHex;
-
-            var card = document.getElementById('peekCard');
-            if (isValidHex6(PAGE_CFG.hex)) {
-                card.style.borderColor = '#' + PAGE_CFG.hex;
-                card.style.color = '#' + PAGE_CFG.hex;
-            } else {
-                card.style.borderColor = '#ff5e94';
-                card.style.color = '#d63384';
-            }
         }
 
         function cfgToCompactObject(cfg) {
@@ -724,7 +581,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             if (cfg.to) o.t = cfg.to;
             if (cfg.from) o.f = cfg.from;
             if (cfg.title && cfg.title !== def.title) o.T = cfg.title;
-            if (cfg.hex) o.h = String(cfg.hex).replace(/^#/, '');
             if (cfg.letter && cfg.letter.trim()) {
                 o.l = normalizeLetterText(cfg.letter);
             }
@@ -744,8 +600,7 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
                 letter: o.l || '',
                 q: o.q || def.q,
                 deny: o.d || def.deny,
-                peek: o.p || def.peek,
-                hex: (o.h || '').replace(/^#/, '')
+                peek: o.p || def.peek
             };
         }
 
@@ -777,14 +632,13 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
                 letter: g('letter'),
                 q: g('q') || def.q,
                 deny: g('deny') || def.deny,
-                peek: g('peek') || def.peek,
-                hex: g('hex').replace(/^#/, '')
+                peek: g('peek') || def.peek
             };
         }
 
         function hasShareInURL() {
             var sp = new URLSearchParams(window.location.search);
-            return sp.has('d') || sp.has('share') || sp.has('to') || sp.has('q') || sp.has('peek') || sp.has('deny') || sp.has('hex') || sp.has('title') || sp.has('letter');
+            return sp.has('d') || sp.has('share') || sp.has('to') || sp.has('q') || sp.has('peek') || sp.has('deny') || sp.has('title') || sp.has('letter');
         }
 
         function buildShareQuery() {
@@ -792,6 +646,7 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             var json = JSON.stringify(cfgToCompactObject(PAGE_CFG));
             return 'd=' + LZString.compressToEncodedURIComponent(json);
         }
+
 
         function buildShareUrl() {
             var base = window.location.href.split(/[?#]/)[0];
@@ -811,8 +666,9 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
         }
 
         function copyShareLink() {
+            readFormToCfg();
             var url = buildShareUrl();
-            var tip = '已复制分享链接（约 ' + url.length + ' 字）。\n微信聊天若被截断，请发到「文件传输助手」再转发给对方。';
+            var tip = '已复制分享链接（约 ' + url.length + ' 字）。\n微信聊天若被截断，请发到「文件传输助手」再转发。';
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(url).then(function () {
                     alert(tip);
@@ -843,9 +699,9 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
 
         function beginFromStudio() {
             readFormToCfg();
-            applyCfgToDOM();
             document.getElementById('configStudio').classList.add('hide');
             resetInteraction();
+            applyCfgToDOM();
         }
 
         let userColor = '';
@@ -994,10 +850,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
         })();
 
         function getHeartColorHex() {
-            if (userColor === '专属') {
-                var hx = isValidHex6(PAGE_CFG.hex) ? PAGE_CFG.hex : defaultCfg().hex;
-                return '#' + hx;
-            }
             if (userColor === '青色') return '#4FC3F7';
             if (userColor === '粉色') return '#ea80b0';
             if (userColor === '随机') {
@@ -1277,7 +1129,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             ev.stopPropagation();
             document.getElementById('modalPeek').classList.add('hide');
             document.getElementById('modal2').classList.add('hide');
-            readFormToCfg();
             startHeartAnimation();
             scheduleLetterScene();
         }
@@ -1288,7 +1139,6 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
         }
 
         window.addEventListener('load', function () {
-            bindExclusiveColorUI();
             initCanvas();
             var sp = new URLSearchParams(window.location.search);
             var dBroken = sp.get('d') && !cfgFromCompressedParam(sp.get('d'));
@@ -1310,7 +1160,7 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
                 writeFormFromCfg();
                 applyCfgToDOM();
             }
-            ['fTo', 'fFrom', 'fTitle', 'fQ', 'fDeny', 'fPeek', 'fHex'].forEach(function (id) {
+            ['fTo', 'fFrom', 'fTitle', 'fQ', 'fDeny', 'fPeek'].forEach(function (id) {
                 var el = document.getElementById(id);
                 if (el) el.addEventListener('input', updateShareLinkLenHint);
             });
