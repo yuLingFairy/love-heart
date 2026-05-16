@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no, email=no, address=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>520 · 爱心定制</title>
+    <style>
+        html, body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            background: #000;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+        canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* 右上角：距下一幕倒计时（爱心阶段提示勿关页） */
+        #nextSceneCountdown {
+            position: fixed;
+            right: 12px;
+            top: 12px;
+            z-index: 600;
+            max-width: 58vw;
+            padding: 10px 14px;
+            font-size: 14px;
+            line-height: 1.35;
+            color: #fff;
+            background: rgba(183, 28, 92, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            pointer-events: none;
+            text-align: right;
+        }
+        #nextSceneCountdown.hide { display: none !important; }
+
+        /* 信件结尾 */
+        #letterStage {
+            position: fixed;
+            inset: 0;
+            z-index: 400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            background: rgba(15, 8, 12, 0.72);
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
+        }
+        #letterStage.hide { display: none !important; }
+        .letter-paper {
+            max-width: 400px;
+            width: 100%;
+            background: linear-gradient(180deg, #fffdf8 0%, #faf6ee 100%);
+            border-radius: 4px;
+            padding: 28px 26px 24px;
+            box-shadow: 0 4px 0 #c4a574, 0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.9);
+            border: 1px solid #e8dcc8;
+            position: relative;
+            font-family: "Songti SC", "STSong", "SimSun", serif;
+            color: #3d2c2a;
+            text-align: left;
+        }
+        .letter-seal {
+            position: absolute;
+            right: 18px;
+            top: 16px;
+            width: 52px;
+            height: 52px;
+            border: 2px solid #c6285c;
+            color: #c6285c;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-8deg);
+            opacity: 0.85;
+        }
+        .letter-deco {
+            font-size: 12px;
+            color: #a08070;
+            margin: 0 0 8px 0;
+            letter-spacing: 0.2em;
+        }
+        .letter-h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 0 18px 0;
+            color: #b71c5c;
+            text-align: center;
+            border-bottom: 1px dashed #d7c4b0;
+            padding-bottom: 14px;
+        }
+        .letter-to {
+            font-size: 17px;
+            margin: 0 0 14px 0;
+            line-height: 1.6;
+        }
+        .letter-body {
+            font-size: 15px;
+            line-height: 1.85;
+            margin: 0 0 22px 0;
+            color: #4a3a38;
+        }
+        .letter-from {
+            font-size: 16px;
+            text-align: right;
+            margin: 0 0 20px 0;
+            color: #5d4037;
+        }
+        .letter-btn {
+            display: block;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 300px;
+            position: relative;
+        }
+        .modal-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn-yes { background: #ff5e94; color: white; }
+        .btn-no { background: #ccc; color: #333; }
+        .btn-pink { background: #ea80b0; color: white; }
+        .btn-blue { background: #4FC3F7; color: white; }
+        .btn-random { background: linear-gradient(45deg, red, blue, purple); color: white; }
+        .hide { display: none !important; }
+
+        #modalPeek {
+            z-index: 200;
+            background: rgba(0,0,0,0.35);
+            pointer-events: auto;
+        }
+        #peekCard {
+            position: fixed;
+            padding: 16px 22px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.92);
+            box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+            cursor: pointer;
+            user-select: none;
+            font-size: 17px;
+            color: #d63384;
+            font-weight: 600;
+            border: 2px dashed #ff5e94;
+            animation: peekPulse 1.2s ease-in-out infinite;
+        }
+        @keyframes peekPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        #modalDeny {
+            z-index: 150;
+            background: rgba(0,0,0,0.55);
+        }
+        #denyBox {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: left 0.12s ease-out, top 0.12s ease-out;
+        }
+
+        #btnReset {
+            position: fixed;
+            left: 12px;
+            top: 12px;
+            z-index: 500;
+            padding: 8px 14px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: rgba(30,30,30,0.85);
+            color: #eee;
+            cursor: pointer;
+        }
+        #btnReset:hover { background: #333; color: #fff; }
+
+        /* 定制台 */
+        #configStudio {
+            z-index: 2000;
+            background: rgba(0,0,0,0.88);
+            align-items: flex-start;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px 0;
+        }
+        #configStudio .modal-box {
+            text-align: left;
+            max-width: 420px;
+            width: 92vw;
+            box-sizing: border-box;
+        }
+        #configStudio .modal-title {
+            text-align: center;
+        }
+        .cfg-field { margin-bottom: 14px; }
+        .cfg-field label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+        }
+        .cfg-field input, .cfg-field textarea {
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 15px;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        .cfg-field textarea { min-height: 64px; resize: vertical; }
+        .preset-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .preset-row .btn { margin: 0; font-size: 14px; padding: 8px 14px; }
+        .cfg-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .cfg-actions .btn { flex: 1; min-width: 120px; margin: 0; }
+        .btn-dark { background: #333; color: #fff; }
+        .cfg-hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+        #modalFromNote {
+            font-size: 12px;
+            color: #888;
+            margin-top: 8px;
+        }
+        #btnExclusive {
+            display: none;
+        }
+        #btnExclusive.show { display: inline-block; }
+
+        .color-swatch-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .color-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 1px #ddd, 0 2px 8px rgba(0,0,0,0.12);
+            cursor: pointer;
+            padding: 0;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .color-swatch:active { transform: scale(0.92); }
+        .color-swatch.clear-swatch {
+            background: linear-gradient(135deg, #f5f5f5 50%, #e0e0e0 50%);
+            font-size: 18px;
+            line-height: 34px;
+            text-align: center;
+            color: #999;
+            font-weight: 700;
+        }
+        .color-picker-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .color-picker-row span {
+            font-size: 13px;
+            color: #555;
+        }
+        #fColorPicker {
+            width: 56px;
+            height: 40px;
+            padding: 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #fff;
+        }
+        .cfg-advanced {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #666;
+        }
+        .cfg-advanced summary { cursor: pointer; user-select: none; }
+        .cfg-advanced[open] summary { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <!-- 定制台：默认打开；带分享参数时自动隐藏 -->
+    <div id="configStudio" class="modal">
+        <div class="modal-box">
+            <div class="modal-title">💗 520 · 专属定制</div>
+
+            <div class="cfg-field">
+                <label for="fTo">对方称呼（会出现在文案里）</label>
+                <input type="text" id="fTo" placeholder="例如：小美" maxlength="20">
+            </div>
+            <div class="cfg-field">
+                <label for="fFrom">署名（可选，小字显示）</label>
+                <input type="text" id="fFrom" placeholder="例如：大明" maxlength="20">
+            </div>
+            <div class="cfg-field">
+                <label for="fTitle">浏览器标题（可选）</label>
+                <input type="text" id="fTitle" placeholder="默认：520 快乐" maxlength="40">
+            </div>
+            <div class="cfg-field">
+                <label for="fLetter">手写信正文（可选，支持换行）</label>
+                <textarea id="fLetter" rows="4" placeholder="不填则使用默认祝福文案"></textarea>
+            </div>
+            <div class="cfg-field">
+                <label for="fQ">开场问题（支持换行）</label>
+                <textarea id="fQ" placeholder="第一屏大段文字"></textarea>
+            </div>
+            <div class="cfg-field">
+                <label for="fDeny">点「不知道」后出现（支持换行）</label>
+                <textarea id="fDeny"></textarea>
+            </div>
+            <div class="cfg-field">
+                <label for="fPeek">选完颜色后的「戳这里」按钮文案</label>
+                <input type="text" id="fPeek" maxlength="80">
+            </div>
+            <div class="cfg-field">
+                <label>专属爱心色（可选）</label>
+                <p style="font-size:12px;color:#888;margin:0 0 10px 0;">点下面圆点快速选色；或点「自选」用系统调色盘。不设则互动里仍选粉 / 青 / 随机。</p>
+                <div class="color-swatch-row" id="swatchRow">
+                    <button type="button" class="color-swatch" style="background:#FF5E94" title="玫瑰粉" aria-label="玫瑰粉" onclick="pickSwatchHex('FF5E94')"></button>
+                    <button type="button" class="color-swatch" style="background:#EA80B0" title="樱花粉" aria-label="樱花粉" onclick="pickSwatchHex('EA80B0')"></button>
+                    <button type="button" class="color-swatch" style="background:#E91E63" title="玫红" aria-label="玫红" onclick="pickSwatchHex('E91E63')"></button>
+                    <button type="button" class="color-swatch" style="background:#FF6B9D" title="蜜桃粉" aria-label="蜜桃粉" onclick="pickSwatchHex('FF6B9D')"></button>
+                    <button type="button" class="color-swatch" style="background:#CE93D8" title="香芋紫" aria-label="香芋紫" onclick="pickSwatchHex('CE93D8')"></button>
+                    <button type="button" class="color-swatch" style="background:#4FC3F7" title="晴空蓝" aria-label="晴空蓝" onclick="pickSwatchHex('4FC3F7')"></button>
+                    <button type="button" class="color-swatch" style="background:#26C6DA" title="蒂芙尼青" aria-label="蒂芙尼青" onclick="pickSwatchHex('26C6DA')"></button>
+                    <button type="button" class="color-swatch" style="background:#FFB74D" title="暖杏橙" aria-label="暖杏橙" onclick="pickSwatchHex('FFB74D')"></button>
+                    <button type="button" class="color-swatch" style="background:#A5D6A7" title="抹茶绿" aria-label="抹茶绿" onclick="pickSwatchHex('A5D6A7')"></button>
+                    <button type="button" class="color-swatch clear-swatch" title="不使用专属色" aria-label="清除专属色" onclick="clearExclusiveColor()">×</button>
+                </div>
+                <div class="color-picker-row">
+                    <span>自选颜色</span>
+                    <input type="color" id="fColorPicker" value="#ea80b0" title="打开系统取色器" aria-label="自选颜色">
+                </div>
+                <details class="cfg-advanced">
+                    <summary>高级 · 手动填 6 位色号</summary>
+                    <input type="text" id="fHex" placeholder="如 FF6B9D，不要 #" maxlength="6" pattern="[0-9A-Fa-f]{0,6}" style="margin-top:4px;">
+                </details>
+            </div>
+
+            <div class="cfg-actions">
+                <button type="button" class="btn btn-yes" onclick="beginFromStudio()">开始体验</button>
+                <button type="button" class="btn btn-dark" onclick="copyShareLink()">复制分享链接</button>
+            </div>
+            <p class="cfg-hint">本页专为<strong>520</strong>场景：可改称呼、署名、标题、手写信正文等后复制链接；结尾会以「信件」展示。情人节 / 生日请用对应独立页面。</p>
+        </div>
+    </div>
+
+    <div id="letterStage" class="hide">
+        <div class="letter-paper">
+            <div class="letter-seal">520</div>
+            <p class="letter-deco">亲笔 · 电子笺</p>
+            <h2 id="letterTitle" class="letter-h2"></h2>
+            <p id="letterTo" class="letter-to"></p>
+            <p id="letterBody" class="letter-body"></p>
+            <p id="letterFrom" class="letter-from"></p>
+            <button type="button" class="btn btn-yes letter-btn" onclick="closeLetterScene()">收下这份心意</button>
+        </div>
+    </div>
+
+    <button type="button" id="btnReset" onclick="resetAll()">重新选择</button>
+    <canvas id="pinkboard"></canvas>
+
+    <div id="modal1" class="modal">
+        <div class="modal-box">
+            <div class="modal-title" id="title1"></div>
+            <button type="button" class="btn btn-yes" onclick="chooseKnow()">知道</button>
+            <button type="button" class="btn btn-no" onclick="chooseNotKnow()">不知道</button>
+            <div id="modalFromNote" class="hide"></div>
+        </div>
+    </div>
+
+    <div id="modal2" class="modal hide">
+        <div class="modal-box">
+            <div class="modal-title" id="title2">💗 520 · 选爱心颜色</div>
+            <button type="button" class="btn btn-pink" onclick="chooseColor('粉色')">粉色</button>
+            <button type="button" class="btn btn-blue" onclick="chooseColor('青色')">青色</button>
+            <button type="button" class="btn btn-random" onclick="chooseColor('随机')">随机</button>
+            <button type="button" class="btn btn-yes" id="btnExclusive" onclick="chooseColor('专属')">专属色</button>
+        </div>
+    </div>
+
+    <div id="modalPeek" class="modal hide">
+        <div id="peekCard" onclick="confirmPeek(event)"></div>
+    </div>
+
+    <div id="modalDeny" class="modal hide">
+        <div id="denyBox" class="modal-box">
+            <div class="modal-title" id="titleDeny"></div>
+            <button type="button" class="btn btn-yes" id="denyKnowBtn" onclick="chooseKnowFromDeny()">知道</button>
+        </div>
+    </div>
+
+    <div id="nextSceneCountdown" class="hide" role="status" aria-live="polite"></div>
+
+    <script>
+        var PAGE_CFG = {
+            to: '',
+            from: '',
+            title: '',
+            letter: '',
+            q: '',
+            deny: '',
+            peek: '',
+            hex: ''
+        };
+
+        function defaultLetterBody() {
+            return '想在这个特别的日子，把藏在心底的话写给你。\n愿接下来的岁岁年年，都有你在身旁。';
+        }
+
+        var LETTER_TIMER = null;
+        var COUNTDOWN_TM = null;
+
+        function getLetterDelayMs() {
+            return 10000;
+        }
+
+        function stopNextSceneCountdown() {
+            if (COUNTDOWN_TM) {
+                clearInterval(COUNTDOWN_TM);
+                COUNTDOWN_TM = null;
+            }
+            var el = document.getElementById('nextSceneCountdown');
+            if (el) {
+                el.classList.add('hide');
+                el.innerHTML = '';
+            }
+        }
+
+        function startNextSceneCountdown(delayMs) {
+            stopNextSceneCountdown();
+            var el = document.getElementById('nextSceneCountdown');
+            if (!el) return;
+            el.classList.remove('hide');
+            var end = Date.now() + delayMs;
+            function update() {
+                var sec = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+                var sub = '别走开，后面还有书信～';
+                el.innerHTML = '还剩 <strong>' + sec + '</strong> 秒<br><span style="font-size:11px;font-weight:500;opacity:.88">' + sub + '</span>';
+                if (sec <= 0) stopNextSceneCountdown();
+            }
+            update();
+            COUNTDOWN_TM = setInterval(update, 500);
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function nlToBr(s) {
+            return esc(s).split(/\r?\n/).join('<br>');
+        }
+
+        function isValidHex6(h) {
+            return typeof h === 'string' && /^[0-9A-Fa-f]{6}$/.test(h);
+        }
+
+        function syncColorPickerFromHexField() {
+            var fx = document.getElementById('fHex');
+            var cp = document.getElementById('fColorPicker');
+            if (!fx || !cp) return;
+            var h = fx.value.trim().replace(/^#/, '');
+            if (isValidHex6(h)) cp.value = '#' + h.toLowerCase();
+            else cp.value = '#ea80b0';
+        }
+
+        function pickSwatchHex(hex6) {
+            var raw = String(hex6 || '').replace(/^#/, '').toUpperCase();
+            if (isValidHex6(raw)) document.getElementById('fHex').value = raw;
+            else document.getElementById('fHex').value = '';
+            syncColorPickerFromHexField();
+        }
+
+        function clearExclusiveColor() {
+            document.getElementById('fHex').value = '';
+            document.getElementById('fColorPicker').value = '#ea80b0';
+        }
+
+        function bindExclusiveColorUI() {
+            var cp = document.getElementById('fColorPicker');
+            var fx = document.getElementById('fHex');
+            if (!cp || !fx) return;
+            cp.addEventListener('input', function () {
+                var v = cp.value;
+                if (/^#[0-9A-Fa-f]{6}$/.test(v)) fx.value = v.slice(1).toUpperCase();
+            });
+            fx.addEventListener('input', function () {
+                var h = fx.value.trim().replace(/^#/, '');
+                if (isValidHex6(h)) cp.value = '#' + h.toLowerCase();
+            });
+        }
+
+        function scheduleLetterScene() {
+            if (LETTER_TIMER) clearTimeout(LETTER_TIMER);
+            var delay = getLetterDelayMs();
+            startNextSceneCountdown(delay);
+            LETTER_TIMER = setTimeout(function () {
+                LETTER_TIMER = null;
+                stopNextSceneCountdown();
+                openLetterScene();
+            }, delay);
+        }
+
+        function fillLetterFromCfg() {
+            readFormToCfg();
+            var to = PAGE_CFG.to || '你';
+            var title = PAGE_CFG.title || '520 快乐';
+            var from = PAGE_CFG.from;
+            document.getElementById('letterTitle').textContent = title;
+            document.getElementById('letterTo').textContent = '致「' + to + '」：';
+            document.getElementById('letterBody').innerHTML = nlToBr(
+                (PAGE_CFG.letter && PAGE_CFG.letter.trim()) ? PAGE_CFG.letter : defaultLetterBody()
+            );
+            document.getElementById('letterFrom').textContent = from ? '—— ' + from : '—— 爱你的人';
+        }
+
+        function openLetterScene() {
+            stopNextSceneCountdown();
+            stopAnimation();
+            fillLetterFromCfg();
+            document.getElementById('letterStage').classList.remove('hide');
+        }
+
+        function closeLetterScene() {
+            document.getElementById('letterStage').classList.add('hide');
+            startHeartAnimation();
+        }
+
+        function defaultCfg() {
+            var to = '亲爱的';
+            return {
+                to: '',
+                from: '',
+                title: '520 快乐',
+                q: '💗 520 · 给 ' + to + ' 💗\n「我喜欢你」太普通，我想用一辈子慢慢证明。',
+                deny: '520 这天不许说不🥺\n再点一次「知道」，让我继续宠你～',
+                peek: '👉 领取你的 520 专属爱心',
+                hex: 'FF5E94',
+                letter: ''
+            };
+        }
+
+        function readFormToCfg() {
+            PAGE_CFG.to = document.getElementById('fTo').value.trim();
+            PAGE_CFG.from = document.getElementById('fFrom').value.trim();
+            PAGE_CFG.title = document.getElementById('fTitle').value.trim();
+            PAGE_CFG.letter = document.getElementById('fLetter').value;
+            PAGE_CFG.q = document.getElementById('fQ').value;
+            PAGE_CFG.deny = document.getElementById('fDeny').value;
+            PAGE_CFG.peek = document.getElementById('fPeek').value.trim();
+            PAGE_CFG.hex = document.getElementById('fHex').value.trim().replace(/^#/, '');
+        }
+
+        function writeFormFromCfg() {
+            document.getElementById('fTo').value = PAGE_CFG.to;
+            document.getElementById('fFrom').value = PAGE_CFG.from;
+            document.getElementById('fTitle').value = PAGE_CFG.title;
+            document.getElementById('fLetter').value = PAGE_CFG.letter || '';
+            document.getElementById('fQ').value = PAGE_CFG.q;
+            document.getElementById('fDeny').value = PAGE_CFG.deny;
+            document.getElementById('fPeek').value = PAGE_CFG.peek;
+            document.getElementById('fHex').value = PAGE_CFG.hex;
+            syncColorPickerFromHexField();
+        }
+
+        function applyCfgToDOM() {
+            document.getElementById('title1').innerHTML = nlToBr(PAGE_CFG.q || defaultCfg().q);
+            document.getElementById('titleDeny').innerHTML = nlToBr(PAGE_CFG.deny || defaultCfg().deny);
+            document.getElementById('peekCard').textContent = PAGE_CFG.peek || defaultCfg().peek;
+
+            var t = PAGE_CFG.title;
+            if (t) document.title = t.replace(/</g, '').slice(0, 80);
+            else document.title = PAGE_CFG.to ? ('给 ' + PAGE_CFG.to + ' · 520') : '520 快乐';
+
+            var note = document.getElementById('modalFromNote');
+            if (PAGE_CFG.from) {
+                note.textContent = '—— ' + PAGE_CFG.from;
+                note.classList.remove('hide');
+            } else {
+                note.classList.add('hide');
+            }
+
+            var btnEx = document.getElementById('btnExclusive');
+            if (isValidHex6(PAGE_CFG.hex)) {
+                btnEx.classList.add('show');
+                btnEx.style.background = '#' + PAGE_CFG.hex;
+            } else {
+                btnEx.classList.remove('show');
+                btnEx.style.background = '';
+            }
+
+            var card = document.getElementById('peekCard');
+            if (isValidHex6(PAGE_CFG.hex)) {
+                card.style.borderColor = '#' + PAGE_CFG.hex;
+                card.style.color = '#' + PAGE_CFG.hex;
+            } else {
+                card.style.borderColor = '#ff5e94';
+                card.style.color = '#d63384';
+            }
+        }
+
+        function cfgFromSearchParams(sp) {
+            var d = defaultCfg();
+            function g(k) {
+                var v = sp.get(k);
+                return v == null ? '' : v;
+            }
+            return {
+                to: g('to'),
+                from: g('from'),
+                title: g('title'),
+                letter: g('letter'),
+                q: g('q') || d.q,
+                deny: g('deny') || d.deny,
+                peek: g('peek') || d.peek,
+                hex: g('hex').replace(/^#/, '')
+            };
+        }
+
+        function hasShareInURL() {
+            var sp = new URLSearchParams(window.location.search);
+            return sp.has('share') || sp.has('to') || sp.has('q') || sp.has('peek') || sp.has('deny') || sp.has('hex') || sp.has('title') || sp.has('letter');
+        }
+
+        function buildShareQuery() {
+            readFormToCfg();
+            var p = new URLSearchParams();
+            p.set('share', '1');
+            if (PAGE_CFG.to) p.set('to', PAGE_CFG.to);
+            if (PAGE_CFG.from) p.set('from', PAGE_CFG.from);
+            if (PAGE_CFG.title) p.set('title', PAGE_CFG.title);
+            if (PAGE_CFG.letter && PAGE_CFG.letter.trim()) p.set('letter', PAGE_CFG.letter);
+            if (PAGE_CFG.q) p.set('q', PAGE_CFG.q);
+            if (PAGE_CFG.deny) p.set('deny', PAGE_CFG.deny);
+            if (PAGE_CFG.peek) p.set('peek', PAGE_CFG.peek);
+            if (PAGE_CFG.hex) p.set('hex', PAGE_CFG.hex);
+            return p.toString();
+        }
+
+        function copyShareLink() {
+            readFormToCfg();
+            var base = window.location.href.split('?')[0];
+            var url = base + '?' + buildShareQuery();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function () {
+                    alert('已复制到剪贴板。\n称呼、署名、标题等文字会保存在链接里。');
+                }).catch(function () {
+                    prompt('请手动复制：', url);
+                });
+            } else {
+                prompt('请长按或复制下面整行：', url);
+            }
+        }
+
+        function resetInteraction() {
+            if (LETTER_TIMER) {
+                clearTimeout(LETTER_TIMER);
+                LETTER_TIMER = null;
+            }
+            stopNextSceneCountdown();
+            userColor = '';
+            document.getElementById('letterStage').classList.add('hide');
+            document.getElementById('modalPeek').classList.add('hide');
+            document.getElementById('modal2').classList.add('hide');
+            document.getElementById('modalDeny').classList.add('hide');
+            document.removeEventListener('click', denyBackdropJump, true);
+            document.getElementById('modal1').classList.remove('hide');
+            stopAnimation();
+            applyCfgToDOM();
+        }
+
+        function beginFromStudio() {
+            readFormToCfg();
+            applyCfgToDOM();
+            document.getElementById('configStudio').classList.add('hide');
+            resetInteraction();
+        }
+
+        let userColor = '';
+        let backgroundAnimId = null;
+        let time = null;
+        let rainTime = null;
+        let heartImage = null;
+        let particles = null;
+        let particleRate = 0;
+        let canvas = null;
+        let context = null;
+
+        var loveRain = {
+            columns: [],
+            fontSize: 16,
+            colWidth: 16,
+            lineHeight: 18,
+            chars: 'LOVEU',
+            fadeAlpha: 0.14
+        };
+
+        const settings = {
+            particles: {
+                length: 500,
+                duration: 2,
+                velocity: 100,
+                effect: -0.75,
+                size: 32,
+            },
+        };
+
+        (function () {
+            var b = 0;
+            var c = ["ms", "moz", "webkit", "o"];
+            for (var a = 0; a < c.length && !window.requestAnimationFrame; ++a) {
+                window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"];
+                window.cancelAnimationFrame = window[c[a] + "CancelAnimationFrame"] || window[c[a] + "CancelRequestAnimationFrame"];
+            }
+            if (!window.requestAnimationFrame) {
+                window.requestAnimationFrame = function (h, e) {
+                    var d = new Date().getTime();
+                    var f = Math.max(0, 16 - (d - b));
+                    var g = window.setTimeout(function () { h(d + f); }, f);
+                    b = d + f;
+                    return g;
+                };
+            }
+            if (!window.cancelAnimationFrame) {
+                window.cancelAnimationFrame = function (d) { clearTimeout(d); };
+            }
+        })();
+
+        var Point = (function () {
+            function Point(x, y) {
+                this.x = (typeof x !== 'undefined') ? x : 0;
+                this.y = (typeof y !== 'undefined') ? y : 0;
+            }
+            Point.prototype.clone = function () { return new Point(this.x, this.y); };
+            Point.prototype.length = function (length) {
+                if (typeof length == 'undefined')
+                    return Math.sqrt(this.x * this.x + this.y * this.y);
+                this.normalize();
+                this.x *= length;
+                this.y *= length;
+                return this;
+            };
+            Point.prototype.normalize = function () {
+                var length = this.length();
+                this.x /= length;
+                this.y /= length;
+                return this;
+            };
+            return Point;
+        })();
+
+        var Particle = (function () {
+            function Particle() {
+                this.position = new Point();
+                this.velocity = new Point();
+                this.acceleration = new Point();
+                this.age = 0;
+            }
+            Particle.prototype.initialize = function (x, y, dx, dy) {
+                this.position.x = x;
+                this.position.y = y;
+                this.velocity.x = dx;
+                this.velocity.y = dy;
+                this.acceleration.x = dx * settings.particles.effect;
+                this.acceleration.y = dy * settings.particles.effect;
+                this.age = 0;
+            };
+            Particle.prototype.update = function (deltaTime) {
+                this.position.x += this.velocity.x * deltaTime;
+                this.position.y += this.velocity.y * deltaTime;
+                this.velocity.x += this.acceleration.x * deltaTime;
+                this.velocity.y += this.acceleration.y * deltaTime;
+                this.age += deltaTime;
+            };
+            Particle.prototype.draw = function (context, image) {
+                function ease(t) { return (--t) * t * t + 1; }
+                var size = image.width * ease(this.age / settings.particles.duration);
+                context.globalAlpha = 1 - this.age / settings.particles.duration;
+                context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
+            };
+            return Particle;
+        })();
+
+        var ParticlePool = (function () {
+            var particles, firstActive = 0, firstFree = 0, duration = settings.particles.duration;
+            function ParticlePool(length) {
+                particles = new Array(length);
+                for (var i = 0; i < particles.length; i++) particles[i] = new Particle();
+            }
+            ParticlePool.prototype.add = function (x, y, dx, dy) {
+                particles[firstFree].initialize(x, y, dx, dy);
+                firstFree++;
+                if (firstFree == particles.length) firstFree = 0;
+                if (firstActive == firstFree) firstActive++;
+                if (firstActive == particles.length) firstActive = 0;
+            };
+            ParticlePool.prototype.update = function (deltaTime) {
+                var i;
+                if (firstActive < firstFree) {
+                    for (i = firstActive; i < firstFree; i++) particles[i].update(deltaTime);
+                }
+                if (firstFree < firstActive) {
+                    for (i = firstActive; i < particles.length; i++) particles[i].update(deltaTime);
+                    for (i = 0; i < firstFree; i++) particles[i].update(deltaTime);
+                }
+                while (particles[firstActive].age >= duration && firstActive != firstFree) {
+                    firstActive++;
+                    if (firstActive == particles.length) firstActive = 0;
+                }
+            };
+            ParticlePool.prototype.draw = function (context, image) {
+                var i;
+                if (firstActive < firstFree) {
+                    for (i = firstActive; i < firstFree; i++) particles[i].draw(context, image);
+                }
+                if (firstFree < firstActive) {
+                    for (i = firstActive; i < particles.length; i++) particles[i].draw(context, image);
+                    for (i = 0; i < firstFree; i++) particles[i].draw(context, image);
+                }
+            };
+            return ParticlePool;
+        })();
+
+        function getHeartColorHex() {
+            if (userColor === '专属' && isValidHex6(PAGE_CFG.hex)) return '#' + PAGE_CFG.hex;
+            if (userColor === '青色') return '#4FC3F7';
+            if (userColor === '粉色') return '#ea80b0';
+            if (userColor === '随机') {
+                var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            return '#ea80b0';
+        }
+
+        function pointOnHeart(t) {
+            return new Point(
+                160 * Math.pow(Math.sin(t), 3),
+                130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
+            );
+        }
+
+        function buildHeartImage() {
+            var c = document.createElement('canvas');
+            var ctx = c.getContext('2d');
+            c.width = settings.particles.size;
+            c.height = settings.particles.size;
+            function to(t) {
+                var point = pointOnHeart(t);
+                point.x = settings.particles.size / 2 + point.x * settings.particles.size / 350;
+                point.y = settings.particles.size / 2 - point.y * settings.particles.size / 350;
+                return point;
+            }
+            ctx.beginPath();
+            var t = -Math.PI;
+            var point = to(t);
+            ctx.moveTo(point.x, point.y);
+            while (t < Math.PI) {
+                t += 0.01;
+                point = to(t);
+                ctx.lineTo(point.x, point.y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = getHeartColorHex();
+            ctx.fill();
+            var image = new Image();
+            image.src = c.toDataURL();
+            return image;
+        }
+
+        function paintBlackFull() {
+            if (!canvas || !context) return;
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function initLoveRain() {
+            if (!canvas) return;
+            var w = canvas.width;
+            var h = canvas.height;
+            var fontSize = Math.max(13, Math.min(20, Math.floor(w / 26)));
+            var colWidth = Math.round(fontSize * 0.92);
+            var cols = Math.ceil(w / colWidth) + 2;
+            var pool = loveRain.chars;
+            var columns = [];
+            var ci;
+            for (ci = 0; ci < cols; ci++) {
+                var trail = 10 + Math.floor(Math.random() * 14);
+                var chars = [];
+                var ti;
+                for (ti = 0; ti < trail; ti++) {
+                    chars.push(pool[Math.floor(Math.random() * pool.length)]);
+                }
+                columns.push({
+                    x: ci * colWidth,
+                    y: Math.random() * h,
+                    speed: 95 + Math.random() * 120,
+                    trail: trail,
+                    chars: chars,
+                    tick: Math.random() * 0.5
+                });
+            }
+            loveRain.fontSize = fontSize;
+            loveRain.colWidth = colWidth;
+            loveRain.lineHeight = fontSize * 1.12;
+            loveRain.columns = columns;
+        }
+
+        function drawLoveRainFrame(deltaTime) {
+            if (!context || !canvas) return;
+            var w = canvas.width;
+            var h = canvas.height;
+            var dt = Math.min(0.05, Math.max(0.008, deltaTime || 0.016));
+            var lineH = loveRain.lineHeight;
+
+            context.fillStyle = 'rgba(0, 0, 0, ' + loveRain.fadeAlpha + ')';
+            context.fillRect(0, 0, w, h);
+
+            context.font = '600 ' + loveRain.fontSize + 'px "SF Mono", Menlo, Monaco, Consolas, monospace';
+            context.textAlign = 'center';
+            context.textBaseline = 'top';
+
+            var pool = loveRain.chars;
+            var cols = loveRain.columns;
+            var i;
+            for (i = 0; i < cols.length; i++) {
+                var col = cols[i];
+                col.y += col.speed * dt;
+                if (col.y - col.trail * lineH > h) {
+                    col.y = -lineH * (2 + Math.random() * 6);
+                    col.speed = 95 + Math.random() * 120;
+                    col.trail = 10 + Math.floor(Math.random() * 14);
+                    col.chars.length = 0;
+                    var ti;
+                    for (ti = 0; ti < col.trail; ti++) {
+                        col.chars.push(pool[Math.floor(Math.random() * pool.length)]);
+                    }
+                }
+                col.tick += dt;
+                if (col.tick > 0.11) {
+                    col.tick = 0;
+                    col.chars.unshift(pool[Math.floor(Math.random() * pool.length)]);
+                    if (col.chars.length > col.trail) col.chars.length = col.trail;
+                }
+
+                var j;
+                var cx = col.x + loveRain.colWidth * 0.5;
+                for (j = 0; j < col.chars.length; j++) {
+                    var isHead = j === 0;
+                    var fade = isHead ? 1 : Math.max(0.06, 1 - j / (col.trail + 1));
+                    if (isHead) {
+                        context.shadowColor = 'rgba(255, 94, 148, 0.9)';
+                        context.shadowBlur = 10;
+                        context.fillStyle = 'rgba(255, 120, 175, ' + fade + ')';
+                    } else {
+                        context.shadowBlur = 0;
+                        context.fillStyle = 'rgba(255, 182, 210, ' + (fade * 0.55) + ')';
+                    }
+                    context.fillText(col.chars[j], cx, col.y - j * lineH);
+                }
+            }
+            context.shadowBlur = 0;
+            context.globalAlpha = 1;
+        }
+
+        function tickBackground() {
+            if (!context || !canvas) return;
+            var now = new Date().getTime() / 1000;
+            var rainDt = rainTime ? now - rainTime : 0.016;
+            rainTime = now;
+            drawLoveRainFrame(rainDt);
+
+            if (particles && heartImage && heartImage.complete && heartImage.naturalWidth > 0) {
+                var deltaTime = time ? now - time : 0.016;
+                time = now;
+                var amount = particleRate * deltaTime;
+                var pi;
+                for (pi = 0; pi < amount; pi++) {
+                    var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
+                    var dir = pos.clone().length(settings.particles.velocity);
+                    particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
+                }
+                particles.update(deltaTime);
+                context.globalAlpha = 1;
+                particles.draw(context, heartImage);
+            }
+
+            backgroundAnimId = requestAnimationFrame(tickBackground);
+        }
+
+        function startBackgroundLoop() {
+            if (backgroundAnimId) return;
+            rainTime = new Date().getTime() / 1000;
+            tickBackground();
+        }
+
+        function stopAnimation() {
+            time = null;
+            particles = null;
+            heartImage = null;
+        }
+
+        function startHeartAnimation() {
+            stopAnimation();
+            heartImage = buildHeartImage();
+            function beginParticles() {
+                particles = new ParticlePool(settings.particles.length);
+                particleRate = settings.particles.length / settings.particles.duration;
+                time = new Date().getTime() / 1000;
+            }
+            if (!heartImage.complete) {
+                heartImage.onload = beginParticles;
+            } else {
+                beginParticles();
+            }
+        }
+
+        function onResize() {
+            if (!canvas) return;
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            paintBlackFull();
+            initLoveRain();
+        }
+
+        function initCanvas() {
+            canvas = document.getElementById('pinkboard');
+            context = canvas.getContext('2d');
+            window.onresize = onResize;
+            onResize();
+            startBackgroundLoop();
+        }
+
+        function chooseKnow() {
+            document.getElementById('modal1').classList.add('hide');
+            document.getElementById('modalDeny').classList.add('hide');
+            document.getElementById('modal2').classList.remove('hide');
+        }
+
+        function chooseKnowFromDeny() {
+            document.getElementById('modalDeny').classList.add('hide');
+            document.removeEventListener('click', denyBackdropJump, true);
+            chooseKnow();
+        }
+
+        function chooseNotKnow() {
+            document.getElementById('modal1').classList.add('hide');
+            document.getElementById('modalDeny').classList.remove('hide');
+            centerDenyBox();
+            setTimeout(function () {
+                document.addEventListener('click', denyBackdropJump, true);
+            }, 0);
+        }
+
+        function centerDenyBox() {
+            var box = document.getElementById('denyBox');
+            box.style.left = '50%';
+            box.style.top = '50%';
+            box.style.webkitTransform = 'translate(-50%, -50%)';
+            box.style.transform = 'translate(-50%, -50%)';
+        }
+
+        function denyBackdropJump(ev) {
+            var deny = document.getElementById('modalDeny');
+            if (deny.classList.contains('hide')) return;
+            var btn = document.getElementById('denyKnowBtn');
+            if (btn && (ev.target === btn || btn.contains(ev.target))) return;
+
+            var box = document.getElementById('denyBox');
+            var w = box.offsetWidth || 320;
+            var h = box.offsetHeight || 160;
+            var pad = 20;
+            var nx = ev.clientX - w / 2 + (Math.random() * 80 - 40);
+            var ny = ev.clientY - h / 2 + (Math.random() * 80 - 40);
+            nx = Math.max(pad, Math.min(window.innerWidth - w - pad, nx));
+            ny = Math.max(pad, Math.min(window.innerHeight - h - pad, ny));
+            box.style.left = nx + 'px';
+            box.style.top = ny + 'px';
+            box.style.webkitTransform = 'none';
+            box.style.transform = 'none';
+        }
+
+        function chooseColor(color) {
+            userColor = color;
+            document.getElementById('modalPeek').classList.remove('hide');
+            placePeekRandom();
+        }
+
+        function placePeekRandom() {
+            var card = document.getElementById('peekCard');
+            var cw = card.offsetWidth || 200;
+            var ch = card.offsetHeight || 50;
+            var margin = 24;
+            var maxX = window.innerWidth - cw - margin;
+            var maxY = window.innerHeight - ch - margin;
+            var x = margin + Math.random() * Math.max(1, maxX - margin);
+            var y = margin + Math.random() * Math.max(1, maxY - margin);
+            card.style.left = x + 'px';
+            card.style.top = y + 'px';
+        }
+
+        function confirmPeek(ev) {
+            ev.stopPropagation();
+            document.getElementById('modalPeek').classList.add('hide');
+            document.getElementById('modal2').classList.add('hide');
+            readFormToCfg();
+            startHeartAnimation();
+            scheduleLetterScene();
+        }
+
+        function resetAll() {
+            resetInteraction();
+            document.getElementById('configStudio').classList.remove('hide');
+        }
+
+        window.addEventListener('load', function () {
+            bindExclusiveColorUI();
+            initCanvas();
+            var sp = new URLSearchParams(window.location.search);
+            if (hasShareInURL()) {
+                PAGE_CFG = cfgFromSearchParams(sp);
+                writeFormFromCfg();
+                applyCfgToDOM();
+                document.getElementById('configStudio').classList.add('hide');
+            } else {
+                PAGE_CFG = defaultCfg();
+                writeFormFromCfg();
+                applyCfgToDOM();
+            }
+        });
+
+        window.addEventListener('orientationchange', function () {
+            setTimeout(onResize, 300);
+        });
+    </script>
+</body>
+</html>
