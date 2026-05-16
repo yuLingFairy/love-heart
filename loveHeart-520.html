@@ -285,9 +285,9 @@
             margin-top: 8px;
         }
         #btnExclusive {
-            display: none;
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.85);
         }
-        #btnExclusive.show { display: inline-block; }
 
         .color-swatch-row {
             display: flex;
@@ -705,13 +705,8 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
             }
 
             var btnEx = document.getElementById('btnExclusive');
-            if (isValidHex6(PAGE_CFG.hex)) {
-                btnEx.classList.add('show');
-                btnEx.style.background = '#' + PAGE_CFG.hex;
-            } else {
-                btnEx.classList.remove('show');
-                btnEx.style.background = '';
-            }
+            var exHex = isValidHex6(PAGE_CFG.hex) ? PAGE_CFG.hex : defaultCfg().hex;
+            btnEx.style.background = '#' + exHex;
 
             var card = document.getElementById('peekCard');
             if (isValidHex6(PAGE_CFG.hex)) {
@@ -999,7 +994,10 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
         })();
 
         function getHeartColorHex() {
-            if (userColor === '专属' && isValidHex6(PAGE_CFG.hex)) return '#' + PAGE_CFG.hex;
+            if (userColor === '专属') {
+                var hx = isValidHex6(PAGE_CFG.hex) ? PAGE_CFG.hex : defaultCfg().hex;
+                return '#' + hx;
+            }
             if (userColor === '青色') return '#4FC3F7';
             if (userColor === '粉色') return '#ea80b0';
             if (userColor === '随机') {
