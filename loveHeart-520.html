@@ -267,6 +267,21 @@
             margin-top: 12px;
             line-height: 1.5;
         }
+        #shareQrModal .modal-box { max-width: 300px; text-align: center; }
+        #shareQrImg {
+            display: block;
+            width: 256px;
+            height: 256px;
+            margin: 12px auto;
+            border-radius: 8px;
+            background: #fff;
+        }
+        #shareLinkLen {
+            font-size: 12px;
+            color: #c2185b;
+            margin: 6px 0 0 0;
+            min-height: 18px;
+        }
         #modalFromNote {
             font-size: 12px;
             color: #888;
@@ -394,9 +409,11 @@
 
             <div class="cfg-actions">
                 <button type="button" class="btn btn-yes" onclick="beginFromStudio()">开始体验</button>
-                <button type="button" class="btn btn-dark" onclick="copyShareLink()">复制分享链接</button>
+                <button type="button" class="btn btn-dark" onclick="copyShareLink()">复制短链接</button>
+                <button type="button" class="btn btn-pink" onclick="showShareQr()">二维码分享</button>
             </div>
-            <p class="cfg-hint">本页专为<strong>520</strong>场景：可改称呼、署名、标题、手写信正文等后复制链接；结尾会以「信件」展示。情人节 / 生日请用对应独立页面。</p>
+            <p id="shareLinkLen"></p>
+            <p class="cfg-hint">分享已<strong>压缩为单参数</strong>，比原来短很多。微信里若仍怕截断，请用<strong>二维码分享</strong>或「文件传输助手」发整段链接。本页专为<strong>520</strong>场景；情人节 / 生日请用对应独立页面。</p>
         </div>
     </div>
 
@@ -445,7 +462,20 @@
         </div>
     </div>
 
+    <div id="shareQrModal" class="modal hide" onclick="if(event.target===this)closeShareQr()">
+        <div class="modal-box">
+            <p style="margin:0 0 4px 0;font-size:15px;color:#333;">微信扫码打开</p>
+            <p style="margin:0 0 8px 0;font-size:12px;color:#888;">避免聊天里链接被截断</p>
+            <img id="shareQrImg" width="256" height="256" alt="分享二维码">
+            <button type="button" class="btn btn-yes" style="margin-top:12px;" onclick="closeShareQr()">关闭</button>
+        </div>
+    </div>
+
     <div id="nextSceneCountdown" class="hide" role="status" aria-live="polite"></div>
+
+    <script>
+var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",e={};function t(r,o){if(!e[r]){e[r]={};for(var n=0;n<r.length;n++)e[r][r.charAt(n)]=n}return e[r][o]}var i={compressToBase64:function(r){if(null==r)return"";var n=i._compress(r,6,function(r){return o.charAt(r)});switch(n.length%4){default:case 0:return n;case 1:return n+"===";case 2:return n+"==";case 3:return n+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(n){return t(o,r.charAt(n))})},compressToUTF16:function(o){return null==o?"":i._compress(o,15,function(o){return r(o+32)})+" "},decompressFromUTF16:function(r){return null==r?"":""==r?null:i._decompress(r.length,16384,function(o){return r.charCodeAt(o)-32})},compressToUint8Array:function(r){for(var o=i.compress(r),n=new Uint8Array(2*o.length),e=0,t=o.length;e<t;e++){var s=o.charCodeAt(e);n[2*e]=s>>>8,n[2*e+1]=s%256}return n},decompressFromUint8Array:function(o){if(null==o)return i.decompress(o);for(var n=new Array(o.length/2),e=0,t=n.length;e<t;e++)n[e]=256*o[2*e]+o[2*e+1];var s=[];return n.forEach(function(o){s.push(r(o))}),i.decompress(s.join(""))},compressToEncodedURIComponent:function(r){return null==r?"":i._compress(r,6,function(r){return n.charAt(r)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),i._decompress(r.length,32,function(o){return t(n,r.charAt(o))}))},compress:function(o){return i._compress(o,16,function(o){return r(o)})},_compress:function(r,o,n){if(null==r)return"";var e,t,i,s={},u={},a="",p="",c="",l=2,f=3,h=2,d=[],m=0,v=0;for(i=0;i<r.length;i+=1)if(a=r.charAt(i),Object.prototype.hasOwnProperty.call(s,a)||(s[a]=f++,u[a]=!0),p=c+a,Object.prototype.hasOwnProperty.call(s,p))c=p;else{if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++),s[p]=f++,c=String(a)}if(""!==c){if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++)}for(t=2,e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;for(;;){if(m<<=1,v==o-1){d.push(n(m));break}v++}return d.join("")},decompress:function(r){return null==r?"":""==r?null:i._decompress(r.length,32768,function(o){return r.charCodeAt(o)})},_decompress:function(o,n,e){var t,i,s,u,a,p,c,l=[],f=4,h=4,d=3,m="",v=[],g={val:e(0),position:n,index:1};for(t=0;t<3;t+=1)l[t]=t;for(s=0,a=Math.pow(2,2),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 2:return""}for(l[3]=c,i=c,v.push(c);;){if(g.index>o)return"";for(s=0,a=Math.pow(2,d),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(c=s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 2:return v.join("")}if(0==f&&(f=Math.pow(2,d),d++),l[c])m=l[c];else{if(c!==h)return null;m=i+i.charAt(0)}v.push(m),l[h++]=i+m.charAt(0),i=m,0==--f&&(f=Math.pow(2,d),d++)}}};return i}();"function"==typeof define&&define.amd?define(function(){return LZString}):"undefined"!=typeof module&&null!=module?module.exports=LZString:"undefined"!=typeof angular&&null!=angular&&angular.module("LZString",[]).factory("LZString",function(){return LZString});
+    </script>
 
     <script>
         var PAGE_CFG = {
@@ -658,8 +688,52 @@
             }
         }
 
+        function cfgToCompactObject(cfg) {
+            var def = defaultCfg();
+            var o = {};
+            if (cfg.to) o.t = cfg.to;
+            if (cfg.from) o.f = cfg.from;
+            if (cfg.title && cfg.title !== def.title) o.T = cfg.title;
+            if (cfg.letter && cfg.letter.trim()) o.l = cfg.letter.trim();
+            if (cfg.q && cfg.q !== def.q) o.q = cfg.q;
+            if (cfg.deny && cfg.deny !== def.deny) o.d = cfg.deny;
+            if (cfg.peek && cfg.peek !== def.peek) o.p = cfg.peek;
+            if (cfg.hex) o.h = String(cfg.hex).replace(/^#/, '');
+            return o;
+        }
+
+        function cfgFromCompactObject(o) {
+            var def = defaultCfg();
+            if (!o || typeof o !== 'object') return def;
+            return {
+                to: o.t || '',
+                from: o.f || '',
+                title: o.T || def.title,
+                letter: o.l || '',
+                q: o.q || def.q,
+                deny: o.d || def.deny,
+                peek: o.p || def.peek,
+                hex: (o.h || '').replace(/^#/, '')
+            };
+        }
+
+        function cfgFromCompressedParam(d) {
+            try {
+                var json = LZString.decompressFromEncodedURIComponent(d);
+                if (!json) return null;
+                return cfgFromCompactObject(JSON.parse(json));
+            } catch (e) {
+                return null;
+            }
+        }
+
         function cfgFromSearchParams(sp) {
-            var d = defaultCfg();
+            var packed = sp.get('d');
+            if (packed) {
+                var fromD = cfgFromCompressedParam(packed);
+                if (fromD) return fromD;
+            }
+            var def = defaultCfg();
             function g(k) {
                 var v = sp.get(k);
                 return v == null ? '' : v;
@@ -667,48 +741,70 @@
             return {
                 to: g('to'),
                 from: g('from'),
-                title: g('title'),
+                title: g('title') || def.title,
                 letter: g('letter'),
-                q: g('q') || d.q,
-                deny: g('deny') || d.deny,
-                peek: g('peek') || d.peek,
+                q: g('q') || def.q,
+                deny: g('deny') || def.deny,
+                peek: g('peek') || def.peek,
                 hex: g('hex').replace(/^#/, '')
             };
         }
 
         function hasShareInURL() {
             var sp = new URLSearchParams(window.location.search);
-            return sp.has('share') || sp.has('to') || sp.has('q') || sp.has('peek') || sp.has('deny') || sp.has('hex') || sp.has('title') || sp.has('letter');
+            return sp.has('d') || sp.has('share') || sp.has('to') || sp.has('q') || sp.has('peek') || sp.has('deny') || sp.has('hex') || sp.has('title') || sp.has('letter');
         }
 
         function buildShareQuery() {
             readFormToCfg();
-            var p = new URLSearchParams();
-            p.set('share', '1');
-            if (PAGE_CFG.to) p.set('to', PAGE_CFG.to);
-            if (PAGE_CFG.from) p.set('from', PAGE_CFG.from);
-            if (PAGE_CFG.title) p.set('title', PAGE_CFG.title);
-            if (PAGE_CFG.letter && PAGE_CFG.letter.trim()) p.set('letter', PAGE_CFG.letter);
-            if (PAGE_CFG.q) p.set('q', PAGE_CFG.q);
-            if (PAGE_CFG.deny) p.set('deny', PAGE_CFG.deny);
-            if (PAGE_CFG.peek) p.set('peek', PAGE_CFG.peek);
-            if (PAGE_CFG.hex) p.set('hex', PAGE_CFG.hex);
-            return p.toString();
+            var json = JSON.stringify(cfgToCompactObject(PAGE_CFG));
+            return 'd=' + LZString.compressToEncodedURIComponent(json);
+        }
+
+        function buildShareUrl() {
+            var base = window.location.href.split(/[?#]/)[0];
+            return base + '?' + buildShareQuery();
+        }
+
+        function updateShareLinkLenHint() {
+            var el = document.getElementById('shareLinkLen');
+            if (!el) return;
+            try {
+                readFormToCfg();
+                var url = buildShareUrl();
+                el.textContent = '当前分享链接约 ' + url.length + ' 个字符' + (url.length > 1200 ? '（较长，建议用二维码）' : '');
+            } catch (e) {
+                el.textContent = '';
+            }
         }
 
         function copyShareLink() {
-            readFormToCfg();
-            var base = window.location.href.split('?')[0];
-            var url = base + '?' + buildShareQuery();
+            var url = buildShareUrl();
+            var tip = '已复制短链接（约 ' + url.length + ' 字）。\n微信聊天若仍被截断，请点「二维码分享」或发到文件传输助手。';
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(url).then(function () {
-                    alert('已复制到剪贴板。\n称呼、署名、标题等文字会保存在链接里。');
+                    alert(tip);
                 }).catch(function () {
-                    prompt('请手动复制：', url);
+                    prompt('请手动复制整行（不要漏掉末尾）：', url);
                 });
             } else {
                 prompt('请长按或复制下面整行：', url);
             }
+        }
+
+        function showShareQr() {
+            readFormToCfg();
+            var url = buildShareUrl();
+            var img = document.getElementById('shareQrImg');
+            if (img) {
+                img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=256x256&margin=10&data=' + encodeURIComponent(url);
+            }
+            document.getElementById('shareQrModal').classList.remove('hide');
+            updateShareLinkLenHint();
+        }
+
+        function closeShareQr() {
+            document.getElementById('shareQrModal').classList.add('hide');
         }
 
         function resetInteraction() {
@@ -1185,6 +1281,11 @@
                 writeFormFromCfg();
                 applyCfgToDOM();
             }
+            ['fTo', 'fFrom', 'fTitle', 'fLetter', 'fQ', 'fDeny', 'fPeek', 'fHex'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.addEventListener('input', updateShareLinkLenHint);
+            });
+            updateShareLinkLenHint();
         });
 
         window.addEventListener('orientationchange', function () {
